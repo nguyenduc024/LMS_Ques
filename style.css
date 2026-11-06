@@ -133,7 +133,9 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; }
 .w-ring-hit { stroke: transparent; stroke-width: 14; pointer-events: stroke; cursor: grab; touch-action: none; }
 .ring-seeking, .ring-seeking .w-ring-hit { cursor: grabbing; user-select: none; }
 .ring-seeking .w-ring-bar { transition: none; }   /* đang kéo: vòng đi theo tay ngay */
-.wheel:hover .w-ring-bar { stroke-width: 4; }
+@media (hover: hover) {
+  .wheel:hover .w-ring-bar { stroke-width: 4; }
+}
 
 .wheel.mini { width: 112px; height: 112px; }
 .wheel.mini .w-label { font-size: 9px; }
@@ -177,6 +179,20 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; }
   position: fixed; left: 0; bottom: 0; width: 1px; height: 1px;
   overflow: hidden; opacity: 0; pointer-events: none;
 }
+.yt-unlock-note, #yt-unlock-close { display: none; }
+
+/* Điện thoại: hiện khung YouTube thật để chạm vào 1 lần (trình duyệt mới cho phát nhạc) */
+.yt-hidden.unlock {
+  left: 50%; top: 50%; bottom: auto; transform: translate(-50%, -50%);
+  width: min(320px, calc(100vw - 32px)); height: auto;
+  overflow: visible; opacity: 1; pointer-events: auto; z-index: 1000;
+  background: var(--card); border-radius: var(--radius); padding: 16px;
+  box-shadow: 0 0 0 100vmax rgba(16, 24, 40, 0.45);
+  text-align: center;
+}
+.yt-hidden.unlock .yt-unlock-note { display: block; margin: 0 0 12px; font-size: 15px; }
+.yt-hidden.unlock iframe { display: block; width: 100%; height: 180px; border: 0; border-radius: 10px; }
+.yt-hidden.unlock #yt-unlock-close { display: inline-block; margin-top: 12px; }
 
 /* Máy nghe nhạc thu nhỏ */
 .mini-player {
@@ -195,8 +211,11 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; }
   opacity: 0; visibility: hidden; transform: translateY(8px);
   transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
 }
-.mini-player:hover .mini-covers, .mini-player:focus-within .mini-covers {
-  opacity: 1; visibility: visible; transform: none;
+/* Chỉ máy có chuột mới dùng :hover. Trên iPhone, hover làm hiện thêm nội dung
+   khiến lần chạm đầu bị coi là "di chuột" và nút trên đĩa không bấm được. */
+.mini-player:focus-within .mini-covers { opacity: 1; visibility: visible; transform: none; }
+@media (hover: hover) {
+  .mini-player:hover .mini-covers { opacity: 1; visibility: visible; transform: none; }
 }
 .mini-covers { touch-action: none; }
 .mini-covers .covers-track { flex-direction: column; width: 100%; height: max-content; }
@@ -217,7 +236,10 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; }
 
 /* Thanh âm lượng: ẩn, hiện khi di chuột vào / bấm vào máy nghe nhạc thu nhỏ */
 .mini-volume-row { display: none; align-items: center; gap: 8px; margin-top: 8px; color: var(--muted); }
-.mini-player:hover .mini-volume-row, .mini-player:focus-within .mini-volume-row { display: flex; }
+.mini-player:focus-within .mini-volume-row { display: flex; }
+@media (hover: hover) {
+  .mini-player:hover .mini-volume-row { display: flex; }
+}
 .mini-volume-row svg { width: 14px; height: 14px; flex-shrink: 0; }
 .mini-volume-row .spk { fill: currentColor; }
 .mini-volume-row .wave { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; }
