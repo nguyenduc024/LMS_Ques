@@ -85,6 +85,10 @@ function formatTime(sec) {
   return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
 }
 
+// Vòng tiến trình quanh đĩa (đơn vị theo viewBox 100x100 của SVG)
+const RING_R = 46;
+const RING_C = 2 * Math.PI * RING_R;
+
 const Music = {
   list: typeof PLAYLIST !== 'undefined' ? shuffle(PLAYLIST) : [], // xáo thứ tự mỗi lần mở web
   idx: 0,
@@ -92,6 +96,9 @@ const Music = {
   enabled: false,
   screen: 'home',
   centers: [],
+  rings: [],       // thanh tiến trình bao quanh các đĩa
+  ringDrag: null,  // đang kéo vòng để tua: phần trăm 0..1
+  volume: 100,
 
   yt: null, // YT.Player
   ytReady: false,
@@ -103,6 +110,13 @@ const Music = {
     this.makeWheel($('wheel-home'), false);
     this.makeWheel($('wheel-mini'), true);
     this.buildCovers();
+
+    // Thanh âm lượng dưới tên bài ở máy nghe nhạc thu nhỏ
+    let saved = null;
+    try { saved = localStorage.getItem('lms_volume'); } catch (e) { /* bỏ qua */ }
+    this.volume = saved !== null && !isNaN(saved) ? Number(saved) : 100;
+    $('mini-volume').value = this.volume;
+    $('mini-volume').addEventListener('input', (e) => this.setVolume(e.target.value));
 
     $('seek').addEventListener('input', () => {
       if (!this.ytReady) return;
@@ -126,7 +140,7 @@ const Music = {
         height: '200',
         playerVars,
         events: {
-          onReady: () => { this.ytReady = true; this.flush(); },
+          onReady: () => { this.ytReady = true; this.yt.setVolume(this.volume); this.flush(); },
           onStateChange: (e) => this.onState(e.data),
           onError: (e) => this.onError(e.data)
         }
@@ -193,14 +207,84 @@ const Music = {
   makeWheel(container, mini) {
     const center = iconButton('w-center', 'play', 'Phát / Dừng', () => this.toggle());
     this.centers.push(center);
-    container.replaceChildren(
-      el('div', { class: 'wheel' + (mini ? ' mini' : '') }, [
-        iconButton('w-btn w-prev', 'prev', 'Bài trước', () => this.prev()),
-        iconButton('w-btn w-next', 'next', 'Bài sau', () => this.next()),
-        el('span', { class: 'w-label w-bottom', text: 'MEW' }),
-        center
-      ])
-    );
+    const wheel = el('div', { class: 'wheel' + (mini ? ' mini' : '') }, [
+      iconButton('w-btn w-prev', 'prev', 'Bài trước', () => this.prev()),
+      iconButton('w-btn w-next', 'next', 'Bài sau', () => this.next()),
+      el('span', { class: 'w-label w-bottom', text: 'MEW' }),
+      center
+    ]);
+    wheel.prepend(this.makeRing());
+    container.replaceChildren(wheel);
+  },
+
+  // Vòng tiến trình bao quanh đĩa: chạy hết 1 vòng = hết bài.
+  // Chạm vào vòng rồi kéo theo đường tròn để tua xuôi / ngược.
+  makeRing() {
+    const holder = document.createElement('div');
+    holder.innerHTML = // SVG cố định, không lấy từ người dùng
+      '<svg class="w-ring" viewBox="0 0 100 100" aria-hidden="true">' +
+      `<circle class="w-ring-track" cx="50" cy="50" r="${RING_R}"/>` +
+      `<circle class="w-ring-bar" cx="50" cy="50" r="${RING_R}"/>` +
+      `<circle class="w-ring-hit" cx="50" cy="50" r="${RING_R}"/>` +
+      '</svg>';
+    const svg = holder.firstChild;
+    const bar = svg.querySelector('.w-ring-bar');
+    bar.style.strokeDasharray = RING_C;
+    bar.style.strokeDashoffset = RING_C;
+    this.rings.push(bar);
+
+    // Góc của con trỏ so với tâm đĩa -> phần trăm bài hát (0 ở đỉnh, tăng theo chiều kim đồng hồ)
+    const fractionAt = (e) => {
+      const r = svg.getBoundingClientRect();
+      let a = Math.atan2(e.clientX - (r.left + r.width / 2), -(e.clientY - (r.top + r.height / 2)));
+      if (a < 0) a += 2 * Math.PI;
+      return a / (2 * Math.PI);
+    };
+    const duration = () => (this.ytReady && this.track() && this.track().youtube ? this.yt.getDuration() || 0 : 0);
+
+    const hit = svg.querySelector('.w-ring-hit');
+    let pointerId = null;
+    hit.addEventListener('pointerdown', (e) => {
+      if (!duration()) return;
+      e.preventDefault();
+      e.stopPropagation();
+      pointerId = e.pointerId;
+      hit.setPointerCapture(pointerId);
+      document.body.classList.add('ring-seeking');
+      this.ringDrag = fractionAt(e);
+      this.updateProgress();
+    });
+    hit.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== pointerId) return;
+      let f = fractionAt(e);
+      // Không cho nhảy vòng qua đỉnh: kéo quá cuối thì dừng ở cuối, kéo lùi quá đầu thì dừng ở đầu
+      if (this.ringDrag > 0.75 && f < 0.25) f = 1;
+      if (this.ringDrag < 0.25 && f > 0.75) f = 0;
+      this.ringDrag = f;
+      this.yt.seekTo(f * duration(), false); // tua xem trước khi đang kéo
+      this.updateProgress();
+    });
+    const end = (e) => {
+      if (e.pointerId !== pointerId) return;
+      pointerId = null;
+      const dur = duration();
+      if (dur && this.ringDrag != null) this.yt.seekTo(Math.min(this.ringDrag, 0.999) * dur, true);
+      this.ringDrag = null;
+      document.body.classList.remove('ring-seeking');
+    };
+    hit.addEventListener('pointerup', end);
+    hit.addEventListener('pointercancel', end);
+    return svg;
+  },
+
+  // Âm lượng 0-100, nhớ cho lần sau
+  setVolume(v) {
+    this.volume = Math.max(0, Math.min(100, Math.round(v)));
+    try { localStorage.setItem('lms_volume', String(this.volume)); } catch (e) { /* bỏ qua */ }
+    if (this.ytReady) {
+      this.yt.setVolume(this.volume);
+      if (this.volume > 0 && this.yt.isMuted()) this.yt.unMute();
+    }
   },
 
   buildCovers() {
@@ -367,10 +451,14 @@ const Music = {
       cur = this.yt.getCurrentTime() || 0;
       dur = this.yt.getDuration() || 0;
     }
+    // Đang kéo vòng để tua thì hiện theo vị trí đang kéo
+    if (this.ringDrag != null && dur) cur = this.ringDrag * dur;
     $('t-cur').textContent = formatTime(cur);
     $('t-dur').textContent = formatTime(dur);
     if (document.activeElement !== $('seek')) {
       $('seek').value = dur ? Math.round((cur / dur) * 1000) : 0;
     }
+    const f = dur ? Math.min(1, cur / dur) : 0;
+    for (const bar of this.rings) bar.style.strokeDashoffset = RING_C * (1 - f);
   }
 };

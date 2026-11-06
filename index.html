@@ -118,9 +118,14 @@
     <!-- Cột bìa album, hiện khi di chuột vào đĩa -->
     <div id="mini-covers" class="mini-covers"></div>
     <div id="wheel-mini"></div>
-    <div class="mini-info">
+    <div class="mini-info" tabindex="0">
       <b id="mini-title"></b>
       <span id="mini-artist"></span>
+      <!-- Thanh âm lượng: hiện khi di chuột / bấm vào máy nghe nhạc -->
+      <div class="mini-volume-row">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path class="spk" d="M2 6h3l4-3v10l-4-3H2z"/><path class="wave" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.5 3.5a6 6 0 0 1 0 9"/></svg>
+        <input id="mini-volume" class="mini-volume" type="range" min="0" max="100" value="100" aria-label="Âm lượng">
+      </div>
     </div>
   </div>
 
