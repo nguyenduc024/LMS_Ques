@@ -344,5 +344,8 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; }
   .brand { font-size: 16px; }
   .music-panel { flex-direction: column; align-items: stretch; padding: 20px; }
   .music-panel .wheel { margin: 0 auto; }
-  .mini-info { display: none; }
+  /* Điện thoại: ô tên bài gọn hơn; chạm vào ô thì hiện thanh âm lượng bên dưới */
+  .mini-player { gap: 10px; }
+  .mini-info { max-width: 150px; padding: 6px 10px; font-size: 12px; }
+  .mini-volume { width: 100px; }
 }
