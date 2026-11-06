@@ -40,7 +40,7 @@ function parseSongs(text) {
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     if (!line || line.startsWith('#')) continue;
-    const [namePart, linkPart = ''] = line.split('|').map((s) => s.trim());
+    const [namePart, linkPart = '', option = ''] = line.split('|').map((s) => s.trim());
     const dash = namePart.indexOf(' - ');
     if (dash < 0) {
       console.warn('  Bỏ qua (thiếu " - " giữa ca sĩ và tên bài): ' + line);
@@ -49,7 +49,8 @@ function parseSongs(text) {
     songs.push({
       artist: namePart.slice(0, dash).trim(),
       title: namePart.slice(dash + 3).trim(),
-      youtube: youtubeId(linkPart)
+      youtube: youtubeId(linkPart),
+      ytCover: option.toLowerCase() === 'youtube' // không tìm iTunes, dùng thumbnail YouTube
     });
   }
   return songs;
@@ -116,6 +117,8 @@ async function main() {
 
     if (cover) {
       console.log(`  Đã có    ${label}`);
+    } else if (s.ytCover) {
+      console.log(`  YouTube  ${label}  (dùng thumbnail YouTube)`);
     } else {
       try {
         const found = await searchItunes(s.artist, s.title);

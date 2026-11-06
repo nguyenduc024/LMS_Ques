@@ -2,6 +2,8 @@
 #   Ca sĩ - Tên bài | link YouTube
 # Nên dùng link bản audio ("Provided to YouTube by..." hoặc kênh "... - Topic"),
 # MV chính thức hay bị chặn nhúng.
+# Thêm "| youtube" ở cuối dòng để không tìm bìa trên iTunes mà dùng thumbnail YouTube
+# (cho bản vietsub, remix, video tổng hợp... không có trên iTunes).
 # Dòng bắt đầu bằng # là ghi chú, bị bỏ qua.
 #
 # Chạy: node scripts/fetch-covers.mjs
@@ -13,6 +15,21 @@ The Weeknd - Starboy | https://www.youtube.com/watch?v=34Na4j8AVgA
 LE SSERAFIM - HOT | https://www.youtube.com/watch?v=q3V-ByAIl3g
 Taylor Swift - Lover | https://www.youtube.com/watch?v=-BjZmE2gtdo
 Post Malone - Better Now | https://www.youtube.com/watch?v=0tTn95TLIaw
-BLACKPINK - Kill This Love | https://www.youtube.com/watch?v=Il_KNBTmLpQ
 Wren Evans - Từng Quen | https://www.youtube.com/watch?v=YyAAvw8Qf2c
 V - Love Me Again | https://www.youtube.com/watch?v=CF8RUJnljzg
+Bùi Trường Linh - Giờ Thì | https://www.youtube.com/watch?v=69ZDBWoj5YM
+Bùi Trường Linh - Vì Điều Gì | https://www.youtube.com/watch?v=_rEtH_Ir0nE
+Bùi Trường Linh - Từng Ngày Như Mãi Mãi | https://www.youtube.com/watch?v=YgEZxMFD27c
+Bùi Trường Linh - Yêu Người Có Ước Mơ | https://www.youtube.com/watch?v=6r7jzy1LABY
+Bùi Trường Linh - Lời Yêu | https://www.youtube.com/watch?v=glrB6AmvBAQ
+Bùi Trường Linh - Mong Em Hạnh Phúc Suốt Cuộc Đời Này | https://www.youtube.com/watch?v=fuF_-UHX23o
+Bùi Trường Linh - Sớm Như Vậy | https://www.youtube.com/watch?v=6hNenqz0ISA
+Bùi Trường Linh - Đi Cùng Anh | https://www.youtube.com/watch?v=VO3uefb_rBc
+Dangrangto - xương rồng | https://www.youtube.com/watch?v=4jjOH2FR6-E
+Dangrangto - để dành cho em | https://www.youtube.com/watch?v=QxXYWMIQAcQ
+Lu - chẳng giống giáng sinh | https://www.youtube.com/watch?v=7Bh8FOTNWAE
+DIA - Goodbye | https://www.youtube.com/watch?v=eAEwofCQmw8
+Accusefive - 愛人錯過 | https://www.youtube.com/watch?v=DK23U3sJrYg
+任然 - 飞鸟和蝉 | https://www.youtube.com/watch?v=5RdSua1R8c0
+SZA - Kill Bill | https://www.youtube.com/watch?v=SQnc1QibapQ
+Ness Remix - Top 20 Nhạc Hot TikTok 2026 | https://www.youtube.com/watch?v=C7AXM8_iXzk | youtube

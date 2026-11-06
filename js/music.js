@@ -86,7 +86,7 @@ function formatTime(sec) {
 }
 
 const Music = {
-  list: typeof PLAYLIST !== 'undefined' ? PLAYLIST : [],
+  list: typeof PLAYLIST !== 'undefined' ? shuffle(PLAYLIST) : [], // xáo thứ tự mỗi lần mở web
   idx: 0,
   playing: false,
   enabled: false,
