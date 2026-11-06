@@ -128,15 +128,12 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; }
   -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
   mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
 }
-.covers-track {
-  display: flex; align-items: center; width: max-content;
-  animation: covers-scroll var(--dur, 50s) linear infinite;
-}
-.covers:hover .covers-track, .covers:focus-within .covers-track { animation-play-state: paused; }
-@keyframes covers-scroll { to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) {
-  .covers-track { animation: none; }
-}
+/* Chuyển động (tự trôi + kéo) do js/music.js điều khiển */
+.covers-track { display: flex; align-items: center; width: max-content; will-change: transform; }
+.covers, .mini-covers { cursor: grab; user-select: none; -webkit-user-select: none; }
+.covers { touch-action: pan-y; }           /* điện thoại: kéo ngang list, vuốt dọc vẫn cuộn trang */
+.covers.dragging, .mini-covers.dragging,
+.covers.dragging .cover, .mini-covers.dragging .cover { cursor: grabbing; }
 .cover {
   position: relative; flex-shrink: 0;
   width: 130px; height: 130px; margin-right: -84px;
@@ -182,12 +179,8 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; }
 .mini-player:hover .mini-covers, .mini-player:focus-within .mini-covers {
   opacity: 1; visibility: visible; transform: none;
 }
-.mini-covers .covers-track {
-  flex-direction: column; width: 100%; height: max-content;
-  animation-name: covers-scroll-down;
-}
-.mini-covers:hover .covers-track { animation-play-state: paused; }
-@keyframes covers-scroll-down { from { transform: translateY(-50%); } to { transform: translateY(0); } }
+.mini-covers { touch-action: none; }
+.mini-covers .covers-track { flex-direction: column; width: 100%; height: max-content; }
 .mini-covers .cover {
   width: 88px; height: 88px; margin: 0 auto -44px;
   transform: perspective(600px) rotateX(38deg); transform-origin: center bottom;

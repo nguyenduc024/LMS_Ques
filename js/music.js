@@ -17,6 +17,68 @@ function iconButton(cls, icon, label, onclick) {
   return b;
 }
 
+// Cho hàng bìa tự trôi vô hạn và kéo được bằng chuột / ngón tay.
+// track chứa danh sách 2 lần nối nhau; pos chạy trong [0, nửa chiều dài) rồi quay vòng.
+// Ngang: trôi sang trái. Dọc: trôi từ trên xuống. Kéo theo hướng nào thì list đi theo hướng đó.
+function makeScroller(box, track, vertical, secondsPerLoop) {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let pos = 0;
+  let hover = false;
+  let drag = null; // { id, start, startPos, moved }
+  let suppressClick = false;
+  let prev = performance.now();
+
+  const half = () => (vertical ? track.offsetHeight : track.offsetWidth) / 2;
+
+  function frame(now) {
+    const dt = Math.min(0.1, (now - prev) / 1000);
+    prev = now;
+    const h = half();
+    if (h) {
+      if (!drag && !hover && !reduceMotion) pos += (h / secondsPerLoop) * dt;
+      pos = ((pos % h) + h) % h;
+      track.style.transform = vertical ? `translateY(${pos - h}px)` : `translateX(${-pos}px)`;
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // Di chuột vào thì dừng trôi để dễ chọn bài
+  box.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') hover = true; });
+  box.addEventListener('pointerleave', () => { hover = false; });
+
+  box.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    drag = { id: e.pointerId, start: vertical ? e.clientY : e.clientX, startPos: pos, moved: false };
+  });
+  box.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = (vertical ? e.clientY : e.clientX) - drag.start;
+    if (!drag.moved && Math.abs(d) > 5) {
+      drag.moved = true;
+      box.setPointerCapture(e.pointerId);
+      box.classList.add('dragging');
+    }
+    if (drag.moved) pos = vertical ? drag.startPos + d : drag.startPos - d;
+  });
+  const end = () => {
+    if (drag && drag.moved) suppressClick = true;
+    drag = null;
+    box.classList.remove('dragging');
+  };
+  box.addEventListener('pointerup', end);
+  box.addEventListener('pointercancel', end);
+
+  // Vừa kéo xong thì không tính là bấm chọn bài
+  box.addEventListener('click', (e) => {
+    if (suppressClick) {
+      e.stopPropagation();
+      e.preventDefault();
+      suppressClick = false;
+    }
+  }, true);
+}
+
 function formatTime(sec) {
   if (!isFinite(sec)) return '0:00';
   sec = Math.floor(sec);
@@ -142,17 +204,20 @@ const Music = {
   },
 
   buildCovers() {
-    $('covers').replaceChildren(this.coverTrack(false));
-    $('mini-covers').replaceChildren(this.coverTrack(true));
+    const seconds = Math.max(12, this.list.length * 3); // khoảng 3 giây mỗi bài
+    for (const [box, vertical] of [[$('covers'), false], [$('mini-covers'), true]]) {
+      const track = this.coverTrack(vertical);
+      box.replaceChildren(track);
+      if (this.list.length) makeScroller(box, track, vertical, seconds);
+    }
   },
 
-  // Hàng bìa trôi vô hạn: vẽ danh sách 2 lần nối nhau, trượt đúng 1 bản rồi lặp lại.
-  // vertical = cột dọc ở máy nghe nhạc thu nhỏ (trôi từ trên xuống).
+  // Vẽ danh sách 2 lần nối nhau để trôi vòng lặp liền mạch.
+  // vertical = cột dọc ở máy nghe nhạc thu nhỏ.
   coverTrack(vertical) {
     const n = this.list.length;
     const items = [...this.list, ...this.list];
     const track = el('div', { class: 'covers-track' });
-    track.style.setProperty('--dur', Math.max(12, n * 3) + 's'); // khoảng 3 giây mỗi bài
     track.append(
       ...items.map((t, j) => {
         const i = j % n;
