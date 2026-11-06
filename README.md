@@ -21,11 +21,13 @@ apps-script/Code.gs backend (dán vào Apps Script của Google Sheet)
 ## Cài đặt
 
 ### 1. Google Sheet
-Trang question bank cần có các cột tiêu đề: `STT`, `Câu hỏi`, `Phương án A`, `Phương án B`, `Phương án C`, `Phương án D`, `Đáp án đúng` (giá trị A/B/C/D). Thứ tự cột và các cột khác (Ghi chú...) không ảnh hưởng.
+**Mỗi môn học là 1 trang tính (tab)** trong cùng file Sheet. Tên tab chính là tên môn hiện trên web. Thêm môn mới: nhân bản 1 tab có sẵn, đổi tên tab, thay câu hỏi.
 
-Mỗi câu hỏi được nhận diện bằng **STT**, nên STT không được trùng. Dòng nào trống STT sẽ bị bỏ qua. Nếu 2 dòng trùng STT thì chỉ lấy dòng đầu tiên.
+Mỗi tab môn cần có các cột tiêu đề: `STT`, `Câu hỏi`, `Phương án A`, `Phương án B`, `Phương án C`, `Phương án D`, `Đáp án đúng` (giá trị A/B/C/D). Thứ tự cột và các cột khác (Ghi chú...) không ảnh hưởng. Tab nào thiếu cột thì không hiện trên web.
 
-Hai trang `Log_Exam` và `Log_Practice` sẽ được tự tạo khi có người nộp bài đầu tiên.
+Mỗi câu hỏi được nhận diện bằng **STT**, nên STT không được trùng trong cùng 1 môn (các môn khác nhau trùng STT thì không sao). Dòng nào trống STT sẽ bị bỏ qua. Nếu 2 dòng trùng STT thì chỉ lấy dòng đầu tiên.
+
+Hai trang `Log_Exam` và `Log_Practice` (dùng chung cho mọi môn, có cột `Môn học`) sẽ được tự tạo khi có người nộp bài đầu tiên. Nếu đã có trang log từ bản cũ, cột `Môn học` sẽ tự được chèn vào vị trí thứ 3.
 
 Nên đặt múi giờ cho Sheet: **Tệp > Cài đặt > Múi giờ > (GMT+07:00) Bangkok/Hà Nội**.
 

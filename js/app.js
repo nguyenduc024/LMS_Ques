@@ -27,6 +27,31 @@ function setHomeStatus(text, isError) {
   $('home-status').textContent = text;
 }
 
+// Danh sách môn học = các tab câu hỏi trong Google Sheet
+async function loadSubjects() {
+  const select = $('subject');
+  select.replaceChildren(el('option', { value: '', text: 'Đang tải danh sách môn...' }));
+  select.disabled = true;
+  try {
+    const { subjects } = await apiGet('subjects');
+    if (!subjects.length) {
+      select.replaceChildren(el('option', { value: '', text: 'Chưa có môn nào' }));
+      return;
+    }
+    const saved = loadPref('lms_subject', '');
+    select.replaceChildren(
+      ...subjects.map((s) =>
+        el('option', { value: s.name, text: s.name + ' (' + s.count + ' câu)', selected: s.name === saved })
+      )
+    );
+    select.disabled = false;
+  } catch (err) {
+    select.replaceChildren(el('option', { value: '', text: 'Không tải được danh sách môn' }));
+    setHomeStatus('Lỗi: ' + err.message, true);
+  }
+}
+loadSubjects();
+
 async function startMode(mode) {
   const name = $('name').value.trim();
   if (!name) {
@@ -34,15 +59,21 @@ async function startMode(mode) {
     $('name').focus();
     return;
   }
+  const subject = $('subject').value;
+  if (!subject) {
+    setHomeStatus('Vui lòng chọn môn học.', true);
+    return;
+  }
   savePref('lms_name', name);
+  savePref('lms_subject', subject);
   savePref('lms_time', $('time').value);
 
   $('btn-practice').disabled = true;
   $('btn-exam').disabled = true;
   setHomeStatus('Đang tải câu hỏi...');
   try {
-    if (mode === 'practice') await Practice.start(name);
-    else await Exam.start(name, parseInt($('time').value, 10) || 0);
+    if (mode === 'practice') await Practice.start(name, subject);
+    else await Exam.start(name, parseInt($('time').value, 10) || 0, subject);
     setHomeStatus('');
   } catch (err) {
     setHomeStatus('Lỗi: ' + err.message, true);

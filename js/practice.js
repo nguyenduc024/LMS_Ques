@@ -14,10 +14,11 @@ const Practice = {
     this.active = true;
   },
 
-  async start(name) {
-    const data = await apiGet('practice');
-    if (!data.questions.length) throw new Error('Question bank đang trống');
+  async start(name, subject) {
+    const data = await apiGet('practice', { subject });
+    if (!data.questions.length) throw new Error('Môn này chưa có câu hỏi');
     this.reset(name, data.questions);
+    this.subject = subject;
     showScreen('practice');
     this.render();
   },
@@ -79,6 +80,7 @@ const Practice = {
     return {
       action: 'savePractice',
       name: this.name,
+      subject: this.subject,
       maxCorrectStreak: this.maxCorrectStreak,
       maxWrongStreak: this.maxWrongStreak,
       correct: this.correct,
@@ -93,6 +95,7 @@ const Practice = {
     $('r-title').textContent = 'Kết quả luyện tập';
     renderSummary([
       ['Họ và tên', this.name],
+      ['Môn học', this.subject],
       ['Số câu đúng', this.correct],
       ['Số câu sai', this.wrong],
       ['Tổng số câu', total],

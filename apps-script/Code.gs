@@ -1,20 +1,22 @@
 /**
  * API cho web LMS_Ques. Dán file này vào Apps Script của file Google Sheet question bank
  * (Tiện ích mở rộng > Apps Script), rồi Deploy > New deployment > Web app.
+ *
+ * Nhiều môn: mỗi môn là 1 trang tính (tab) trong file này, tên tab = tên môn hiện trên web.
+ * Tab nào có đủ các cột "STT", "Câu hỏi", "Phương án A..D", "Đáp án đúng" thì được tính là 1 môn.
  */
 
-// Để trống = tự tìm trang tính có các cột "STT", "Câu hỏi", "Phương án A..D", "Đáp án đúng".
-const BANK_SHEET_NAME = '';
 const EXAM_SIZE = 40;
 const LOG_EXAM = 'Log_Exam';
 const LOG_PRACTICE = 'Log_Practice';
+const SUBJECT_HEADER = 'Môn học'; // cột thứ 3 trong 2 trang log
 
 const LOG_EXAM_HEADERS = [
-  'Thời gian nộp', 'Họ và tên', 'Điểm số (Thang 10)', 'Số câu đúng',
+  'Thời gian nộp', 'Họ và tên', SUBJECT_HEADER, 'Điểm số (Thang 10)', 'Số câu đúng',
   'Số câu sai', 'Tổng số câu', 'Thời gian làm bài'
 ];
 const LOG_PRACTICE_HEADERS = [
-  'Thời gian nộp', 'Họ và tên', 'Chuỗi đúng', 'Chuỗi thua',
+  'Thời gian nộp', 'Họ và tên', SUBJECT_HEADER, 'Chuỗi đúng', 'Chuỗi thua',
   'Số câu đúng', 'Số câu sai', 'Tổng số câu'
 ];
 
@@ -33,7 +35,12 @@ const BANK_HEADERS = {
 function doGet(e) {
   try {
     const action = (e.parameter.action || '').toString();
-    const bank = loadBank();
+
+    if (action === 'subjects') {
+      return json({ status: 'ok', subjects: listSubjects() });
+    }
+
+    const bank = loadBank(e.parameter.subject);
 
     if (action === 'practice') {
       return json({ status: 'ok', questions: bank });
@@ -55,6 +62,11 @@ function doGet(e) {
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
+    // Dữ liệu từ web HUB (nhập câu hỏi): xử lý bởi importQuestions trong file HUB.gs cùng dự án
+    if (!data.action && Array.isArray(data.questions)) {
+      if (typeof importQuestions === 'function') return importQuestions(e);
+      return json({ status: 'error', message: 'Chưa thêm file HUB.gs (hàm importQuestions) vào dự án Apps Script' });
+    }
     if (data.action === 'submitExam') return json(submitExam(data));
     if (data.action === 'savePractice') return json(savePractice(data));
     return json({ status: 'error', message: 'Action không hợp lệ' });
@@ -65,13 +77,24 @@ function doPost(e) {
 
 // ---------- Actions ----------
 
+// Danh sách môn: [{ name, count }]
+function listSubjects() {
+  const result = [];
+  SpreadsheetApp.getActiveSpreadsheet().getSheets().forEach(function (sheet) {
+    if (isLogSheet(sheet)) return;
+    const questions = parseBank(sheet);
+    if (questions && questions.length) result.push({ name: sheet.getName(), count: questions.length });
+  });
+  return result;
+}
+
 function submitExam(data) {
   const ids = (data.ids || []).slice(0, EXAM_SIZE).map(String);
   if (!ids.length) throw new Error('Bài làm rỗng');
   const answers = data.answers || {};
 
   const byId = {};
-  loadBank().forEach(function (q) { byId[q.id] = q; });
+  loadBank(data.subject).forEach(function (q) { byId[q.id] = q; });
 
   const key = {};
   let correct = 0;
@@ -88,7 +111,8 @@ function submitExam(data) {
   const durationSec = toInt(data.durationSec);
 
   appendLog(LOG_EXAM, LOG_EXAM_HEADERS, [
-    new Date(), cleanName(data.name), score, correct, wrong, total, formatDuration(durationSec)
+    new Date(), cleanText(data.name), cleanText(data.subject), score, correct, wrong, total,
+    formatDuration(durationSec)
   ]);
 
   return { status: 'ok', score: score, correct: correct, wrong: wrong, total: total, key: key };
@@ -100,53 +124,61 @@ function savePractice(data) {
   if (correct + wrong === 0) return { status: 'ok' };
 
   appendLog(LOG_PRACTICE, LOG_PRACTICE_HEADERS, [
-    new Date(), cleanName(data.name), toInt(data.maxCorrectStreak), toInt(data.maxWrongStreak),
-    correct, wrong, correct + wrong
+    new Date(), cleanText(data.name), cleanText(data.subject),
+    toInt(data.maxCorrectStreak), toInt(data.maxWrongStreak), correct, wrong, correct + wrong
   ]);
   return { status: 'ok' };
 }
 
 // ---------- Helpers ----------
 
-function loadBank() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheets = BANK_SHEET_NAME ? [ss.getSheetByName(BANK_SHEET_NAME)] : ss.getSheets();
+function isLogSheet(sheet) {
+  const name = sheet.getName();
+  return name === LOG_EXAM || name === LOG_PRACTICE;
+}
 
-  for (let s = 0; s < sheets.length; s++) {
-    const sheet = sheets[s];
-    if (!sheet || sheet.getName() === LOG_EXAM || sheet.getName() === LOG_PRACTICE) continue;
+// Câu hỏi của 1 môn (tên tab). Không tìm thấy thì báo lỗi.
+function loadBank(subject) {
+  const name = String(subject || '').trim();
+  if (!name) throw new Error('Chưa chọn môn học');
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+  const questions = sheet && !isLogSheet(sheet) ? parseBank(sheet) : null;
+  if (!questions) throw new Error('Không tìm thấy môn "' + name + '"');
+  return questions;
+}
 
-    const values = sheet.getDataRange().getDisplayValues();
-    for (let r = 0; r < Math.min(5, values.length); r++) {
-      const head = values[r].map(norm);
-      const col = {};
-      Object.keys(BANK_HEADERS).forEach(function (k) { col[k] = head.indexOf(BANK_HEADERS[k]); });
-      if (Object.keys(col).some(function (k) { return col[k] < 0; })) continue;
+// Đọc 1 tab thành danh sách câu hỏi. Tab không có đủ cột thì trả về null.
+function parseBank(sheet) {
+  const values = sheet.getDataRange().getDisplayValues();
+  for (let r = 0; r < Math.min(5, values.length); r++) {
+    const head = values[r].map(norm);
+    const col = {};
+    Object.keys(BANK_HEADERS).forEach(function (k) { col[k] = head.indexOf(BANK_HEADERS[k]); });
+    if (Object.keys(col).some(function (k) { return col[k] < 0; })) continue;
 
-      const questions = [];
-      const seen = {};
-      for (let i = r + 1; i < values.length; i++) {
-        const row = values[i];
-        const id = row[col.id].trim();
-        const text = row[col.q].trim();
-        const ans = row[col.ans].trim().toUpperCase().charAt(0);
-        if (!id || !text || !ans || 'ABCD'.indexOf(ans) < 0) continue;
-        if (seen[id]) continue; // STT trùng: chỉ lấy câu đầu tiên
-        seen[id] = true;
-        questions.push({
-          id: id, // STT
-          q: text,
-          a: row[col.a].trim(),
-          b: row[col.b].trim(),
-          c: row[col.c].trim(),
-          d: row[col.d].trim(),
-          ans: ans
-        });
-      }
-      return questions;
+    const questions = [];
+    const seen = {};
+    for (let i = r + 1; i < values.length; i++) {
+      const row = values[i];
+      const id = row[col.id].trim();
+      const text = row[col.q].trim();
+      const ans = row[col.ans].trim().toUpperCase().charAt(0);
+      if (!id || !text || !ans || 'ABCD'.indexOf(ans) < 0) continue;
+      if (seen[id]) continue; // STT trùng: chỉ lấy câu đầu tiên
+      seen[id] = true;
+      questions.push({
+        id: id, // STT
+        q: text,
+        a: row[col.a].trim(),
+        b: row[col.b].trim(),
+        c: row[col.c].trim(),
+        d: row[col.d].trim(),
+        ans: ans
+      });
     }
+    return questions;
   }
-  throw new Error('Không tìm thấy trang question bank (cần các cột: STT, Câu hỏi, Phương án A-D, Đáp án đúng)');
+  return null;
 }
 
 function appendLog(name, headers, row) {
@@ -160,6 +192,10 @@ function appendLog(name, headers, row) {
       sheet.appendRow(headers);
       sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
       sheet.setFrozenRows(1);
+    } else if (sheet.getRange(1, 3).getDisplayValue() !== SUBJECT_HEADER) {
+      // Trang log cũ (trước khi có nhiều môn): chèn cột "Môn học" vào vị trí thứ 3
+      sheet.insertColumnAfter(2);
+      sheet.getRange(1, 3).setValue(SUBJECT_HEADER).setFontWeight('bold');
     }
     sheet.appendRow(row);
     sheet.getRange(sheet.getLastRow(), 1).setNumberFormat('dd/MM/yyyy HH:mm:ss');
@@ -186,9 +222,9 @@ function toInt(v) {
   return isNaN(n) || n < 0 ? 0 : n;
 }
 
-// Chặn tên bắt đầu bằng = + - @ bị Sheet hiểu thành công thức.
-function cleanName(name) {
-  const s = String(name || '').trim().slice(0, 100) || '(không tên)';
+// Chặn chữ bắt đầu bằng = + - @ bị Sheet hiểu thành công thức.
+function cleanText(text) {
+  const s = String(text || '').trim().slice(0, 100) || '(không rõ)';
   return /^[=+\-@]/.test(s) ? "'" + s : s;
 }
 

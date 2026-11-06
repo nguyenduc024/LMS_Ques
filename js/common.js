@@ -55,9 +55,11 @@ function formatScore(n) {
 
 // ---------- API ----------
 
-async function apiGet(action) {
+// params: { subject: '...' } (tuỳ chọn)
+async function apiGet(action, params) {
   if (!API_URL) throw new Error('Chưa cấu hình API_URL trong js/config.js');
-  const res = await fetch(API_URL + '?action=' + encodeURIComponent(action));
+  const query = new URLSearchParams({ action, ...(params || {}) });
+  const res = await fetch(API_URL + '?' + query.toString());
   const data = await res.json();
   if (data.status !== 'ok') throw new Error(data.message || 'Lỗi máy chủ');
   return data;

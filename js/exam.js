@@ -1,10 +1,11 @@
 // Luồng 2: đề 40 câu xáo trộn, chấm điểm ở server.
 const Exam = {
-  async start(name, minutes) {
-    const data = await apiGet('exam');
-    if (!data.questions.length) throw new Error('Question bank đang trống');
+  async start(name, minutes, subject) {
+    const data = await apiGet('exam', { subject });
+    if (!data.questions.length) throw new Error('Môn này chưa có câu hỏi');
 
     this.name = name;
+    this.subject = subject;
     this.questions = data.questions;
     this.answers = {};
     this.flags = {};
@@ -114,6 +115,7 @@ const Exam = {
       const res = await apiPost({
         action: 'submitExam',
         name: this.name,
+        subject: this.subject,
         ids: this.questions.map((q) => q.id),
         answers: this.answers,
         durationSec
@@ -133,6 +135,7 @@ const Exam = {
     $('r-title').textContent = 'Kết quả bài kiểm tra';
     renderSummary([
       ['Họ và tên', this.name],
+      ['Môn học', this.subject],
       ['Điểm số (Thang 10)', formatScore(res.score)],
       ['Số câu đúng', res.correct],
       ['Số câu sai', res.wrong],
