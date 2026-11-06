@@ -106,11 +106,12 @@ const Music = {
   pending: null, // lệnh chờ khi trình phát chưa sẵn sàng: { id, autoplay }
   errors: 0, // số bài lỗi liên tiếp
 
-  // Điện thoại chỉ cho video bắt đầu phát khi người dùng chạm thẳng vào khung YouTube.
-  // unlocked = đã phát được ít nhất 1 lần, từ đó các nút trên đĩa điều khiển được bình thường.
+  // Điện thoại chỉ cho phát nhạc ngay lúc người dùng chạm. Nếu bấm play khi trình phát
+  // còn đang tải, lệnh phát chạy trễ và bị chặn -> báo người dùng chạm lại.
+  // unlocked = đã phát được ít nhất 1 lần, từ đó không cần kiểm tra nữa.
   unlocked: false,
   wantPlay: false,
-  unlockTimer: null,
+  blockedTimer: null,
 
   init() {
     this.makeWheel($('wheel-home'), false);
@@ -123,11 +124,6 @@ const Music = {
     this.volume = saved !== null && !isNaN(saved) ? Number(saved) : 100;
     $('mini-volume').value = this.volume;
     $('mini-volume').addEventListener('input', (e) => this.setVolume(e.target.value));
-
-    $('yt-unlock-close').addEventListener('click', () => {
-      this.wantPlay = false;
-      this.hideUnlock();
-    });
 
     $('seek').addEventListener('input', () => {
       if (!this.ytReady) return;
@@ -174,7 +170,7 @@ const Music = {
       this.errors = 0;
       this.setNote('');
       this.unlocked = true;
-      this.hideUnlock();
+      clearTimeout(this.blockedTimer);
     } else if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.CUED) {
       this.playing = false;
     } else if (state === YT.PlayerState.ENDED) {
@@ -369,7 +365,7 @@ const Music = {
       this.flush();
       if (autoplay) {
         this.wantPlay = true;
-        this.watchUnlock();
+        this.watchBlocked();
       }
     }
     this.updateUI();
@@ -383,7 +379,7 @@ const Music = {
       return;
     }
     this.wantPlay = true;
-    this.watchUnlock();
+    this.watchBlocked();
     if (!this.ytReady) {
       this.pending = { id: t.youtube, autoplay: true };
       this.setNote('Đang tải trình phát...');
@@ -403,29 +399,21 @@ const Music = {
   },
 
   // Chỉ trên màn hình cảm ứng: bấm phát mà sau 2 giây nhạc chưa chạy (bị trình duyệt chặn)
-  // thì hiện khung YouTube thật để người dùng chạm vào 1 lần.
-  watchUnlock() {
+  // thì đưa đĩa về trạng thái dừng và nhắc chạm lại. Lần chạm sau trình phát đã sẵn sàng nên phát được.
+  watchBlocked() {
     if (this.unlocked || !window.matchMedia('(pointer: coarse)').matches) return;
-    clearTimeout(this.unlockTimer);
-    this.unlockTimer = setTimeout(() => {
+    clearTimeout(this.blockedTimer);
+    this.blockedTimer = setTimeout(() => {
       if (this.unlocked || !this.wantPlay) return;
-      if (!this.ytReady) return this.watchUnlock(); // trình phát chưa tải xong, chờ thêm
+      if (!this.ytReady) return this.watchBlocked(); // trình phát chưa tải xong, chờ thêm
       const state = this.yt.getPlayerState();
       if (state === YT.PlayerState.PLAYING) return;
-      if (state === YT.PlayerState.BUFFERING) return this.watchUnlock();
-      this.showUnlock();
+      if (state === YT.PlayerState.BUFFERING) return this.watchBlocked();
+      this.wantPlay = false;
+      this.playing = false;
+      this.setNote('Chạm lại nút phát để bật nhạc.');
+      this.updateUI();
     }, 2000);
-  },
-
-  showUnlock() {
-    $('yt-box').classList.add('unlock');
-    $('yt-box').removeAttribute('aria-hidden');
-  },
-
-  hideUnlock() {
-    clearTimeout(this.unlockTimer);
-    $('yt-box').classList.remove('unlock');
-    $('yt-box').setAttribute('aria-hidden', 'true');
   },
 
   toggle() {

@@ -179,20 +179,6 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; }
   position: fixed; left: 0; bottom: 0; width: 1px; height: 1px;
   overflow: hidden; opacity: 0; pointer-events: none;
 }
-.yt-unlock-note, #yt-unlock-close { display: none; }
-
-/* Điện thoại: hiện khung YouTube thật để chạm vào 1 lần (trình duyệt mới cho phát nhạc) */
-.yt-hidden.unlock {
-  left: 50%; top: 50%; bottom: auto; transform: translate(-50%, -50%);
-  width: min(320px, calc(100vw - 32px)); height: auto;
-  overflow: visible; opacity: 1; pointer-events: auto; z-index: 1000;
-  background: var(--card); border-radius: var(--radius); padding: 16px;
-  box-shadow: 0 0 0 100vmax rgba(16, 24, 40, 0.45);
-  text-align: center;
-}
-.yt-hidden.unlock .yt-unlock-note { display: block; margin: 0 0 12px; font-size: 15px; }
-.yt-hidden.unlock iframe { display: block; width: 100%; height: 180px; border: 0; border-radius: 10px; }
-.yt-hidden.unlock #yt-unlock-close { display: inline-block; margin-top: 12px; }
 
 /* Máy nghe nhạc thu nhỏ */
 .mini-player {
