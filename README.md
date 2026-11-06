@@ -46,7 +46,17 @@ Mỗi lần sửa `Code.gs`: **Deploy > Manage deployments > Edit > Version: New
    const API_URL = 'https://script.google.com/macros/s/xxxx/exec';
    ```
 2. Chạy thử: mở `index.html` bằng trình duyệt (hoặc dùng Live Server của VS Code).
-3. Đưa lên mạng bằng GitHub Pages: push code lên GitHub, rồi vào **Settings > Pages > Branch: main / (root) > Save**.
+3. Đưa lên mạng bằng Vercel: push code lên GitHub, vào vercel.com > **Add New > Project** > chọn repo > Framework Preset: **Other**, để trống Build Command > **Deploy**. Mỗi lần push lên `main`, Vercel tự deploy lại. File trong `.vercelignore` (Apps Script, script, README) không được đưa lên web.
+
+## Nhạc khi làm bài
+
+Nhạc phát bằng trình phát YouTube ẩn. Ảnh bìa tự tải từ iTunes.
+
+1. Sửa `music/songs.txt`, mỗi dòng: `Ca sĩ - Tên bài | link YouTube`
+2. Chạy `node scripts/fetch-covers.mjs`. Script tải bìa vào `music/covers/` và tạo lại `music/playlist.js`. Bìa sai thì thay file ảnh bằng tay, giữ nguyên tên.
+3. Nên dùng link bản audio ("Provided to YouTube by..." hoặc kênh "... - Topic"). MV chính thức hay bị chặn nhúng. Kiểm tra nhanh bằng cách mở `https://www.youtube.com/embed/<ID>`.
+
+**Chạy thử trên máy:** YouTube không phát khi mở `index.html` trực tiếp (lỗi 153). Chạy `node scripts/serve.mjs` rồi mở http://localhost:5500 (hoặc dùng Live Server).
 
 ## Lưu ý
 - Đáp án của đề 40 câu không được gửi xuống trình duyệt, nên user không xem trộm được bằng DevTools. Riêng chế độ luyện tập thì có gửi đáp án, vì cần hiện ngay sau khi chọn.

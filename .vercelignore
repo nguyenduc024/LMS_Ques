@@ -1,0 +1,5 @@
+# Không đưa lên web các file chỉ dùng khi phát triển
+apps-script/
+scripts/
+music/songs.txt
+README.md

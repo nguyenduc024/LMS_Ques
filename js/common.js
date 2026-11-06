@@ -25,6 +25,7 @@ function showScreen(name) {
     s.hidden = s.id !== 'screen-' + name;
   }
   window.scrollTo(0, 0);
+  if (typeof Music !== 'undefined') Music.onScreen(name);
 }
 
 function shuffle(arr) {

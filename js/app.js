@@ -10,6 +10,18 @@ function savePref(key, value) {
 $('name').value = loadPref('lms_name', '');
 $('time').value = loadPref('lms_time', '60');
 
+// Phát nhạc khi làm bài: Có / Không
+Music.init();
+const musicPref = loadPref('lms_music', '0');
+for (const r of document.querySelectorAll('input[name="music"]')) {
+  r.checked = r.value === musicPref;
+  r.addEventListener('change', () => {
+    savePref('lms_music', r.value);
+    Music.setEnabled(r.value === '1');
+  });
+}
+Music.setEnabled(musicPref === '1');
+
 function setHomeStatus(text, isError) {
   $('home-status').className = 'status' + (isError ? ' error' : '');
   $('home-status').textContent = text;

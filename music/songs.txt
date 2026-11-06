@@ -1,0 +1,18 @@
+# Danh sách nhạc. Mỗi dòng 1 bài:
+#   Ca sĩ - Tên bài | link YouTube
+# Nên dùng link bản audio ("Provided to YouTube by..." hoặc kênh "... - Topic"),
+# MV chính thức hay bị chặn nhúng.
+# Dòng bắt đầu bằng # là ghi chú, bị bỏ qua.
+#
+# Chạy: node scripts/fetch-covers.mjs
+
+ROSÉ - two years | https://www.youtube.com/watch?v=W7wn8Xh2tKs
+JENNIE - Mantra | https://www.youtube.com/watch?v=qsQqvqyhbW4
+NewJeans - Super Shy | https://www.youtube.com/watch?v=0c7zGU2C2mM
+The Weeknd - Starboy | https://www.youtube.com/watch?v=34Na4j8AVgA
+LE SSERAFIM - HOT | https://www.youtube.com/watch?v=q3V-ByAIl3g
+Taylor Swift - Lover | https://www.youtube.com/watch?v=-BjZmE2gtdo
+Post Malone - Better Now | https://www.youtube.com/watch?v=0tTn95TLIaw
+BLACKPINK - Kill This Love | https://www.youtube.com/watch?v=Il_KNBTmLpQ
+Wren Evans - Từng Quen | https://www.youtube.com/watch?v=YyAAvw8Qf2c
+V - Love Me Again | https://www.youtube.com/watch?v=CF8RUJnljzg
