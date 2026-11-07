@@ -137,6 +137,51 @@ function renderQuestion(container, o) {
 }
 
 // Bảng tóm tắt ở màn kết quả
+// Danh sách xem lại từng câu sau khi làm xong, có nút lọc "Tất cả / Chỉ câu đúng / Chỉ câu sai".
+// items: [{ q, selected, answer, info }] — câu không trả lời cũng tính là sai.
+function renderReview(items) {
+  const boxes = items.map((it, i) => {
+    const box = el('div');
+    const ok = it.selected === it.answer;
+    box.dataset.wrong = ok ? '0' : '1';
+    renderQuestion(box, {
+      number: i + 1,
+      info: it.info,
+      q: it.q,
+      selected: it.selected,
+      locked: true,
+      answer: it.answer,
+      feedback: 'Đáp án đúng: ' + it.answer,
+      feedbackClass: ok ? 'ok' : 'bad'
+    });
+    return box;
+  });
+  if (!boxes.length) return $('r-review').replaceChildren();
+
+  const wrongCount = boxes.filter((b) => b.dataset.wrong === '1').length;
+  const rightCount = boxes.length - wrongCount;
+  const empty = el('p', { class: 'review-empty', hidden: true });
+  // mode: 'all' | 'right' | 'wrong'
+  const modes = [
+    ['all', 'Tất cả (' + boxes.length + ')'],
+    ['right', 'Chỉ câu đúng (' + rightCount + ')'],
+    ['wrong', 'Chỉ câu sai (' + wrongCount + ')']
+  ];
+  const buttons = modes.map(([mode, label]) =>
+    el('button', { type: 'button', class: mode === 'all' ? 'on' : null, text: label, onclick: () => setFilter(mode) })
+  );
+  function setFilter(mode) {
+    for (const b of boxes) {
+      const wrong = b.dataset.wrong === '1';
+      b.hidden = (mode === 'wrong' && !wrong) || (mode === 'right' && wrong);
+    }
+    empty.textContent = mode === 'wrong' ? 'Không có câu sai nào.' : 'Không có câu đúng nào.';
+    empty.hidden = !((mode === 'wrong' && wrongCount === 0) || (mode === 'right' && rightCount === 0));
+    buttons.forEach((btn, k) => btn.classList.toggle('on', modes[k][0] === mode));
+  }
+  $('r-review').replaceChildren(el('div', { class: 'review-filter' }, buttons), empty, ...boxes);
+}
+
 function renderSummary(rows) {
   $('r-summary').replaceChildren(
     ...rows.map(([k, v]) => el('tr', {}, [el('th', { text: k }), el('td', { text: String(v) })]))

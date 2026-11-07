@@ -10,6 +10,7 @@ const Practice = {
     this.streak = 0; // > 0: đang chuỗi đúng, < 0: đang chuỗi sai
     this.maxCorrectStreak = 0;
     this.maxWrongStreak = 0;
+    this.history = []; // các câu đã làm: { q, selected } để xem lại khi hoàn tất
     this.sent = false;
     this.active = true;
   },
@@ -56,6 +57,7 @@ const Practice = {
   choose(L) {
     if (this.selected != null) return;
     this.selected = L;
+    this.history.push({ q: this.current(), selected: L });
     if (L === this.current().ans) {
       this.correct++;
       this.streak = this.streak > 0 ? this.streak + 1 : 1;
@@ -102,7 +104,10 @@ const Practice = {
       ['Chuỗi đúng dài nhất', this.maxCorrectStreak],
       ['Chuỗi sai dài nhất', this.maxWrongStreak]
     ]);
-    $('r-review').replaceChildren();
+    renderReview(this.history.map(({ q, selected }) => ({
+      q, selected, answer: q.ans,
+      info: [selected === q.ans ? 'Đúng' : 'Sai']
+    })));
     showScreen('result');
 
     const status = $('r-status');

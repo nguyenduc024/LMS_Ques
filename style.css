@@ -326,8 +326,18 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; }
 .summary th, .summary td { text-align: left; padding: 8px 32px 8px 0; }
 .summary th { font-weight: 400; color: var(--muted); }
 .summary td { font-weight: 600; }
+
+/* Lọc phần xem lại: Tất cả / Chỉ câu đúng / Chỉ câu sai */
+.review-filter { display: flex; flex-wrap: wrap; gap: 8px; }
+.review-filter button {
+  border: 0; border-radius: 999px; padding: 8px 16px; cursor: pointer;
+  background: var(--card); color: var(--muted); box-shadow: var(--shadow);
+  font: inherit; font-size: 14px; font-weight: 600;
+}
+.review-filter button.on { background: var(--accent); color: #fff; }
+.review-empty { color: var(--muted); margin: 16px 0 0; }
 #r-review { margin-top: 24px; }
-#r-review > div { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-top: 16px; }
+#r-review > div:not(.review-filter) { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-top: 16px; }
 #r-review .qwrap { margin-top: 0; }
 
 /* Cửa sổ vừa: thu hẹp sidebar để vẫn nằm bên phải */

@@ -146,24 +146,15 @@ const Exam = {
     $('r-status').textContent = 'Đã lưu kết quả.';
 
     // Xem lại từng câu
-    const review = this.questions.map((q, i) => {
-      const box = el('div');
+    renderReview(this.questions.map((q) => {
       const selected = this.answers[q.id] || null;
       const answer = res.key[q.id];
       const ok = selected === answer;
-      renderQuestion(box, {
-        number: i + 1,
-        info: [selected ? (ok ? 'Đúng' : 'Sai') : 'Không trả lời', 'Đạt điểm ' + (ok ? '1,0' : '0,0')],
-        q,
-        selected,
-        locked: true,
-        answer,
-        feedback: 'Đáp án đúng: ' + answer,
-        feedbackClass: ok ? 'ok' : 'bad'
-      });
-      return box;
-    });
-    $('r-review').replaceChildren(...review);
+      return {
+        q, selected, answer,
+        info: [selected ? (ok ? 'Đúng' : 'Sai') : 'Không trả lời', 'Đạt điểm ' + (ok ? '1,0' : '0,0')]
+      };
+    }));
     showScreen('result');
   }
 };
