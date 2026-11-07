@@ -117,6 +117,7 @@ const Music = {
     this.makeWheel($('wheel-home'), false);
     this.makeWheel($('wheel-mini'), true);
     this.buildCovers();
+    this.setupMiniDock();
 
     // Thanh âm lượng dưới tên bài ở máy nghe nhạc thu nhỏ
     let saved = null;
@@ -449,7 +450,56 @@ const Music = {
   },
 
   updateMini() {
-    $('mini-player').hidden = !(this.enabled && this.screen !== 'home');
+    const box = $('mini-player');
+    box.hidden = !(this.enabled && this.screen !== 'home');
+    if (box.hidden) box.classList.remove('open');
+  },
+
+  // Máy nghe nhạc thu nhỏ thụt nửa đĩa vào mép trái. Rê chuột vào (hoặc chạm vào
+  // trên điện thoại) thì mở ra; rời chuột / chạm ra ngoài thì thụt lại.
+  setupMiniDock() {
+    const box = $('mini-player');
+    const open = () => box.classList.add('open');
+    const close = () => {
+      box.classList.remove('open');
+      if (box.contains(document.activeElement)) document.activeElement.blur();
+    };
+    let swallowClick = false;
+
+    box.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') open(); });
+    box.addEventListener('pointerleave', (e) => {
+      if (e.pointerType === 'mouse' && this.ringDrag == null) close();
+    });
+    // Kéo vòng tua / cột bìa rồi thả chuột ở ngoài thì cũng thụt lại
+    document.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'mouse' && box.classList.contains('open')) {
+        setTimeout(() => { if (!box.matches(':hover')) close(); }, 0);
+      }
+    });
+
+    // Cảm ứng: lần chạm đầu khi đĩa đang thụt chỉ để kéo đĩa ra, không bấm nút / tua
+    box.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' || box.classList.contains('open')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      swallowClick = true;
+      open();
+    }, true);
+    box.addEventListener('click', (e) => {
+      if (!swallowClick) return;
+      swallowClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+    }, true);
+    document.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'mouse' && !box.contains(e.target)) close();
+    });
+
+    // Bàn phím: Tab vào thì mở, Tab ra ngoài thì đóng
+    box.addEventListener('focusin', open);
+    box.addEventListener('focusout', (e) => {
+      if (!box.contains(e.relatedTarget) && !box.matches(':hover')) box.classList.remove('open');
+    });
   },
 
   showInfo(t) {

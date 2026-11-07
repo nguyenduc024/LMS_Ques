@@ -180,28 +180,32 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; }
   overflow: hidden; opacity: 0; pointer-events: none;
 }
 
-/* Máy nghe nhạc thu nhỏ */
+/* Máy nghe nhạc thu nhỏ: bình thường thụt nửa đĩa vào mép trái cho đỡ vướng.
+   Khi mở (.open: rê chuột / chạm vào), đĩa trượt ra trước, sau đó tên bài,
+   âm lượng và cột bìa mới trượt ra. Khi đóng thì làm ngược lại. */
 .mini-player {
-  position: fixed; left: 20px; bottom: 20px; z-index: 50;
+  position: fixed; left: 0; bottom: 20px; z-index: 50;
+  padding-left: 20px; /* vùng đệm để chuột không rơi khỏi đĩa khi đĩa trượt ra */
   display: flex; align-items: center; gap: 12px;
+  transform: translateX(-76px); /* 20px đệm + nửa đĩa 56px */
+  transition: transform 0.35s cubic-bezier(.2,.8,.2,1) 0.15s;
 }
+.mini-player.open { transform: none; transition-delay: 0s; }
 .mini-player[hidden] { display: none; }
 
-/* Cột bìa dọc phía trên đĩa nhỏ: ẩn, hiện khi di chuột vào đĩa, trôi từ trên xuống */
+/* Cột bìa dọc phía trên đĩa nhỏ: trượt lên từ đĩa, trôi từ trên xuống */
 .mini-covers {
-  position: absolute; left: 0; bottom: 100%;
+  position: absolute; left: 20px; bottom: 100%;
   width: 112px; height: 380px; padding-bottom: 12px; /* đệm để chuột đi từ đĩa lên không bị mất hover */
   overflow: hidden;
   -webkit-mask-image: linear-gradient(to bottom, transparent, #000 15%, #000 85%, transparent);
   mask-image: linear-gradient(to bottom, transparent, #000 15%, #000 85%, transparent);
-  opacity: 0; visibility: hidden; transform: translateY(8px);
-  transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+  opacity: 0; visibility: hidden; transform: translateY(60px) scale(0.85); transform-origin: center bottom;
+  transition: opacity 0.2s, transform 0.2s, visibility 0s 0.2s;
 }
-/* Chỉ máy có chuột mới dùng :hover. Trên iPhone, hover làm hiện thêm nội dung
-   khiến lần chạm đầu bị coi là "di chuột" và nút trên đĩa không bấm được. */
-.mini-player:focus-within .mini-covers { opacity: 1; visibility: visible; transform: none; }
-@media (hover: hover) {
-  .mini-player:hover .mini-covers { opacity: 1; visibility: visible; transform: none; }
+.mini-player.open .mini-covers {
+  opacity: 1; visibility: visible; transform: none;
+  transition: opacity 0.3s 0.3s, transform 0.4s cubic-bezier(.2,.8,.2,1) 0.3s, visibility 0s 0.3s;
 }
 .mini-covers { touch-action: none; }
 .mini-covers .covers-track { flex-direction: column; width: 100%; height: max-content; }
@@ -215,17 +219,19 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; }
   display: flex; flex-direction: column; max-width: 200px;
   background: var(--card); border-radius: 12px; box-shadow: var(--shadow);
   padding: 8px 14px; font-size: 13px;
+  opacity: 0; visibility: hidden; transform: translateX(-24px);
+  transition: opacity 0.2s, transform 0.2s, visibility 0s 0.2s;
+}
+.mini-player.open .mini-info {
+  opacity: 1; visibility: visible; transform: none;
+  transition: opacity 0.3s 0.25s, transform 0.35s cubic-bezier(.2,.8,.2,1) 0.25s, visibility 0s 0.25s;
 }
 .mini-info b, .mini-info span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mini-info span { color: var(--muted); }
 .mini-info:focus { outline: none; }
 
-/* Thanh âm lượng: ẩn, hiện khi di chuột vào / bấm vào máy nghe nhạc thu nhỏ */
-.mini-volume-row { display: none; align-items: center; gap: 8px; margin-top: 8px; color: var(--muted); }
-.mini-player:focus-within .mini-volume-row { display: flex; }
-@media (hover: hover) {
-  .mini-player:hover .mini-volume-row { display: flex; }
-}
+/* Thanh âm lượng dưới tên bài (hiện cùng ô tên bài khi mở máy nghe nhạc) */
+.mini-volume-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: var(--muted); }
 .mini-volume-row svg { width: 14px; height: 14px; flex-shrink: 0; }
 .mini-volume-row .spk { fill: currentColor; }
 .mini-volume-row .wave { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; }
@@ -344,7 +350,7 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; }
   .brand { font-size: 16px; }
   .music-panel { flex-direction: column; align-items: stretch; padding: 20px; }
   .music-panel .wheel { margin: 0 auto; }
-  /* Điện thoại: ô tên bài gọn hơn; chạm vào ô thì hiện thanh âm lượng bên dưới */
+  /* Điện thoại: ô tên bài gọn hơn */
   .mini-player { gap: 10px; }
   .mini-info { max-width: 150px; padding: 6px 10px; font-size: 12px; }
   .mini-volume { width: 100px; }
