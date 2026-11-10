@@ -90,9 +90,12 @@ const Practice = {
     };
   },
 
-  async finish() {
+  // showAll: hiện cả các câu chưa làm trong bộ câu hỏi (đánh dấu "Chưa chọn").
+  async finish(showAll) {
     this.active = false;
     const total = this.correct + this.wrong;
+    // Câu chưa làm: câu hiện tại (nếu chưa chọn) và các câu phía sau.
+    const skipped = showAll ? this.bank.slice(this.idx + (this.selected != null ? 1 : 0)) : [];
 
     $('r-title').textContent = 'Kết quả luyện tập';
     renderSummary([
@@ -101,13 +104,17 @@ const Practice = {
       ['Số câu đúng', this.correct],
       ['Số câu sai', this.wrong],
       ['Tổng số câu', total],
+      ...(showAll ? [['Số câu chưa chọn', skipped.length]] : []),
       ['Chuỗi đúng dài nhất', this.maxCorrectStreak],
       ['Chuỗi sai dài nhất', this.maxWrongStreak]
     ]);
     renderReview(this.history.map(({ q, selected }) => ({
       q, selected, answer: q.ans,
       info: [selected === q.ans ? 'Đúng' : 'Sai']
-    })));
+    })).concat(skipped.map((q) => ({
+      q, selected: null, answer: q.ans, skipped: true,
+      info: ['Chưa chọn']
+    }))));
     showScreen('result');
 
     const status = $('r-status');

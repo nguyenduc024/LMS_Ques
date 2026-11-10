@@ -88,6 +88,7 @@ $('btn-exam').addEventListener('click', () => startMode('exam'));
 
 $('p-next').addEventListener('click', () => Practice.next());
 $('p-finish').addEventListener('click', () => Practice.finish());
+$('p-show-all').addEventListener('click', () => Practice.finish(true));
 
 $('e-prev').addEventListener('click', () => Exam.prev());
 $('e-next').addEventListener('click', () => Exam.next());

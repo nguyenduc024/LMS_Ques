@@ -288,6 +288,7 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; }
 .feedback { margin-top: 16px; font-weight: 600; }
 .feedback.ok { color: var(--green); }
 .feedback.bad { color: var(--wrong); }
+.feedback.skip { color: var(--muted); }
 
 /* Làm đề: layout 2 cột */
 .layout { display: flex; gap: 28px; align-items: flex-start; }
